@@ -1,5 +1,6 @@
 package DataModel;
 
+import CONSTANT.CONS;
 import FileContent.Student;
 import Repository.StudentRepo;
 
@@ -33,12 +34,8 @@ public class DataModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int column) {
-        if(column == 0)
-            return "ID";
-        else if(column == 1)
-            return "Name";
-        else
-            return "Score";
+        return CONS.column[column];
     }
+
 
 }

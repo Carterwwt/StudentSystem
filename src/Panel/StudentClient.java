@@ -3,47 +3,139 @@ package Panel;
 import CONSTANT.CONS;
 import DataModel.DataModel;
 import FileContent.Student;
-import FileContent.StudentList;
+import FileTools.Tools;
 import Repository.StudentRepo;
+import Exception.FileIOException;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.table.JTableHeader;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Collections;
-import java.util.Comparator;
+import java.io.File;
+import java.util.ArrayList;
 
 @SuppressWarnings("all")
 
-public class StudentClient extends JFrame {
+public class StudentClient extends JFrame {//I can't find the problem!!! Or there is no big here!
 
-    Container container = getContentPane();
     JPanel scorePanel;
     JPanel analyPanel;
+    JPanel analyView;
     JScrollPane scroll;
     JTable table;
+    JFileChooser chooser;
+    File file;
+    AbstractTableModel dataModel;
+
+    JMenuItem openTxtFile;
+    JMenuItem saveObjectFile;
+    JMenuItem readObjectFile;
+    JMenuItem clear;
 
     public StudentClient() {
-        scorePanel = new JPanel();
+        chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         setLayout(null);
         setTitle("学生成绩管理系统------Created By CarterWang");
-        setBounds(550,200, CONS.frameWidth,CONS.frameHeight);
+        setBounds(400,200, CONS.frameWidth,CONS.frameHeight);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // set panel
-        setUpScorePanel();
-        setUpAnalyPanel();
+        // set Menu
+        setUpMenu();
         setVisible(true);
     }
 
+    private void setUpMenu() {
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+
+        openTxtFile = new JMenuItem("Open TXT file");
+        saveObjectFile = new JMenuItem("Save Object file");
+        readObjectFile = new JMenuItem("Read Object file");
+        clear = new JMenuItem("Clear");
+        saveObjectFile.setEnabled(false);
+        readObjectFile.setEnabled(false);
+        clear.setEnabled(false);
+
+        openTxtFile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                saveObjectFile.setEnabled(false);
+                readObjectFile.setEnabled(false);
+                removeData();
+                int response = chooser.showOpenDialog(menuBar);
+                if(response == JFileChooser.APPROVE_OPTION) {
+                    file = chooser.getSelectedFile();
+                    try {
+                        Tools.readTXTFile(file, StudentRepo.getStudentList());
+                        saveObjectFile.setEnabled(true);
+                        clear.setEnabled(true);
+                    } catch (FileIOException ee) {
+                        saveObjectFile.setEnabled(false);
+                        ee.showMessageDialog();
+                    }
+                    if(scorePanel == null && analyPanel == null) {
+                        setUpScorePanel();
+                        setUpAnalyPanel();
+                        repaint();
+                    } else {
+                        repaint();
+                    }
+
+                }
+            }
+        });
+
+        saveObjectFile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                try {
+                    Tools.saveObjectFile(file, StudentRepo.getStudentList());
+                    readObjectFile.setEnabled(true);
+                } catch (FileIOException ee) {
+                    readObjectFile.setEnabled(false);
+                    ee.showMessageDialog();
+                }
+
+            }
+        });
+
+        readObjectFile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                try {
+                    Tools.readObjectFile(file,StudentRepo.getStudentList());
+                } catch (FileIOException ee) {
+                    ee.showMessageDialog();
+                }
+            }
+        });
+
+        clear.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                removeData();
+            }
+        });
+
+
+        fileMenu.add(openTxtFile);
+        fileMenu.add(saveObjectFile);
+        fileMenu.add(readObjectFile);
+        fileMenu.add(clear);
+        menuBar.add(fileMenu);
+        setJMenuBar(menuBar);
+    }
+
     private void setUpScorePanel() {
+
+        scorePanel = new JPanel();
 
         // set scorePanel
         scorePanel.setLayout(null);
         scorePanel.setBounds(CONS.scorePanelX,CONS.scorePanelY,CONS.scorePanelWidth,CONS.scorePanelHeight);
         scorePanel.setBorder(BorderFactory.createLoweredBevelBorder());
-        scorePanel.setVisible(true);
 
         //set table
         setUpTable();
@@ -54,13 +146,14 @@ public class StudentClient extends JFrame {
         scorePanel.add(scroll);
 
         // Set label
-        JLabel label = new JLabel("成绩单");
-        label.setFont(new Font("宋体", Font.BOLD,14));
+        JLabel label = new JLabel("Score");
+        label.setFont(new Font("Helvetica", Font.BOLD,14));
         label.setBounds(10,10,50,20);
         label.setVisible(true);
         scorePanel.add(label);
 
         add(scorePanel);
+        scorePanel.setVisible(true);
 
     }
 
@@ -68,81 +161,71 @@ public class StudentClient extends JFrame {
         analyPanel = new JPanel();
         analyPanel.setBounds(CONS.analyPanelX,CONS.analyPanelY,CONS.analyPanelWidth,CONS.analyPanelHeight);
         analyPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+        analyPanel.setLayout(null);
+
+        // Set Label
         JLabel label = new JLabel("Data Analysis");
+        label.setFont(new Font("Helvetica", Font.BOLD,14));
+        label.setBounds(10,10,100,20);
         label.setVisible(true);
+
+        // Set Panel
+        analyView = new JPanel();
+        analyView.setBorder(BorderFactory.createLoweredBevelBorder());
+        analyView.setBounds(CONS.analyViewX,CONS.analyViewY,CONS.analyViewWidth,CONS.analyViewHeight);
+        analyView.setVisible(true);
+        analyPanel.add(analyView);
+
         analyPanel.add(label);
         add(analyPanel);
+        analyPanel.setVisible(true);
+
+        getJMenuBar().getMenu(0).getItem(1).setEnabled(true);
     }
 
     private void setUpTable() {
 
-        table = new JTable(new DataModel());
+        dataModel = new DataModel();
+
+        table = new JTable(dataModel);
         table.setRowHeight(20);
         table.setFont(new Font("宋体",Font.PLAIN,13));
+        table.setRowSelectionAllowed(false);
+        RowSorter<AbstractTableModel> rowSorter = new TableRowSorter<AbstractTableModel>(dataModel);
+        table.setRowSorter(rowSorter);
+
+        // Set header
         JTableHeader header = table.getTableHeader();
-        header.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                int pick = header.columnAtPoint(e.getPoint());
-                switch (pick) {
-                    case 0:
-                        sortByID();
-                        break;
-                    case 1:
-                        sortByName();
-                        break;
-                    case 2:
-                        sortByScore();
-                        break;
-                    default:
-                        break;
-                }
+        header.setPreferredSize(new Dimension(header.getWidth(),22));
+        header.setFont(new Font("Helvetica",Font.PLAIN,14));
+
+        // Set Cell Render
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer()// 设置表格间隔色
+        {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                // table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+                if (row % 2 == 0)
+                    setBackground(new Color(236,236,236));
+                else if (row % 2 == 1)
+                    setBackground(Color.white);
+                return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             }
-        });
+        };
+
+        ArrayList<Student> list = StudentRepo.getStudentList().getStudents();
+
+        for(int i=0;i<3;i++) {
+            table.getColumn(CONS.column[i]).setCellRenderer(renderer);
+        }
+
         scorePanel.add(table);
     }
 
-    public void sortByID() {
-        System.out.println("Sort by ID");
-        StudentList list = StudentRepo.getStudentList();
-        Collections.sort(list.getStudents(), new Comparator<Student>() {
-            @Override
-            public int compare(Student o1, Student o2) {
-                if(o1.getId().compareTo(o2.getId()) <= 0)
-                    return -1;
-                else
-                    return 1;
-            }
-        });
+    private void removeData() {
+        StudentRepo.getStudentList().getStudents().clear();
+        dataModel = new DataModel();
+        repaint();
     }
-
-    public void sortByName() {
-        System.out.println("Sort by Name");
-        StudentList list = StudentRepo.getStudentList();
-        Collections.sort(list.getStudents(), new Comparator<Student>() {
-            @Override
-            public int compare(Student o1, Student o2) {
-                if(o1.getName().compareTo(o2.getName()) <= 0)
-                    return -1;
-                else
-                    return 1;
-            }
-        });
-    }
-
-    public void sortByScore() {
-        System.out.println("Sort by Score");
-        StudentList list = StudentRepo.getStudentList();
-        Collections.sort(list.getStudents(), new Comparator<Student>() {
-            @Override
-            public int compare(Student o1, Student o2) {
-                if(o1.getScore() > o2.getScore())
-                    return -1;
-                else
-                    return 1;
-            }
-        });
-    }
-
 
 }
