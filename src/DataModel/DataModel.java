@@ -37,5 +37,4 @@ public class DataModel extends AbstractTableModel {
         return CONS.column[column];
     }
 
-
 }

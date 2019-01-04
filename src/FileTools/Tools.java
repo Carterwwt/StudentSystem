@@ -14,7 +14,9 @@ import Exception.FileIOException;
 
 public class Tools {
 
+    private Tools(){
 
+    }
 
     public static void setUpFile(File file) {
 
@@ -36,6 +38,7 @@ public class Tools {
 
         if(file.getName().endsWith(".txt")) {
             if (file.exists()) {
+                StudentRepo.getStudentList().getStudents().clear();
                 try {
                     FileReader in = new FileReader(file);
                     BufferedReader reader = new BufferedReader(in);
@@ -52,6 +55,7 @@ public class Tools {
                     //outputList(studentList);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    e.getMessage();
                 }
             } else {
                 System.out.println("File not existed!");
@@ -71,7 +75,8 @@ public class Tools {
             try {
                 FileInputStream fileIn = new FileInputStream(file);
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-                studentList.setStudents((ArrayList<Student>)objectIn.readObject());
+                ArrayList<Student> students = (ArrayList<Student>) objectIn.readObject();
+                studentList.setStudents(students);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw (new FileIOException("File IO Error!"));
@@ -103,11 +108,17 @@ public class Tools {
         System.out.println("---------------------------------------");
     }
 
-    public static void outputList(StudentList studentList) {
-        for(Student student : studentList.getStudents()) {
+    public static void outputList(ArrayList<Student> students) {
+        for(Student student : students) {
             System.out.println(student.toString());
         }
         System.out.println("---------------------------------------");
+    }
+
+    public static void removeData() {
+        StudentRepo.getStudentList().getStudents().clear();
+        Student student = new Student("00000001","Example Student",99);
+        StudentRepo.getStudentList().getStudents().add(student);
     }
 
 }

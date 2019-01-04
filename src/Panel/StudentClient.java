@@ -28,6 +28,9 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     File file;
     AbstractTableModel dataModel;
 
+    JMenuBar menuBar;
+    JMenu fileMenu;
+
     JMenuItem openTxtFile;
     JMenuItem saveObjectFile;
     JMenuItem readObjectFile;
@@ -47,13 +50,14 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
 
     private void setUpMenu() {
 
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
+        menuBar = new JMenuBar();
+        fileMenu = new JMenu("File");
 
         openTxtFile = new JMenuItem("Open TXT file");
         saveObjectFile = new JMenuItem("Save Object file");
         readObjectFile = new JMenuItem("Read Object file");
         clear = new JMenuItem("Clear");
+
         saveObjectFile.setEnabled(false);
         readObjectFile.setEnabled(false);
         clear.setEnabled(false);
@@ -61,19 +65,18 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         openTxtFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                saveObjectFile.setEnabled(false);
-                readObjectFile.setEnabled(false);
-                removeData();
                 int response = chooser.showOpenDialog(menuBar);
                 if(response == JFileChooser.APPROVE_OPTION) {
                     file = chooser.getSelectedFile();
                     try {
                         Tools.readTXTFile(file, StudentRepo.getStudentList());
+                        refreshTable();
                         saveObjectFile.setEnabled(true);
                         clear.setEnabled(true);
+                        Tools.outputList(StudentRepo.getStudentList().getStudents());
                     } catch (FileIOException ee) {
-                        saveObjectFile.setEnabled(false);
                         ee.showMessageDialog();
+                        disableAllJmenuItems();
                     }
                     if(scorePanel == null && analyPanel == null) {
                         setUpScorePanel();
@@ -106,6 +109,8 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             public void mousePressed(MouseEvent e) {
                 try {
                     Tools.readObjectFile(file,StudentRepo.getStudentList());
+                    refreshTable();
+                    Tools.outputList(StudentRepo.getStudentList().getStudents());
                 } catch (FileIOException ee) {
                     ee.showMessageDialog();
                 }
@@ -115,10 +120,11 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         clear.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                removeData();
+                Tools.removeData();
+                refreshTable();
+                disableAllJmenuItems();
             }
         });
-
 
         fileMenu.add(openTxtFile);
         fileMenu.add(saveObjectFile);
@@ -126,6 +132,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         fileMenu.add(clear);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
+
     }
 
     private void setUpScorePanel() {
@@ -180,7 +187,6 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         add(analyPanel);
         analyPanel.setVisible(true);
 
-        getJMenuBar().getMenu(0).getItem(1).setEnabled(true);
     }
 
     private void setUpTable() {
@@ -222,10 +228,18 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         scorePanel.add(table);
     }
 
-    private void removeData() {
-        StudentRepo.getStudentList().getStudents().clear();
-        dataModel = new DataModel();
-        repaint();
+
+    private void refreshTable() {
+        if(table != null) {
+            table.validate();
+            table.updateUI();
+        }
+    }
+
+    private void disableAllJmenuItems() {
+        saveObjectFile.setEnabled(false);
+        readObjectFile.setEnabled(false);
+        clear.setEnabled(false);
     }
 
 }
