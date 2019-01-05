@@ -3,12 +3,14 @@ package Panel;
 import CONSTANT.CONS;
 import DataModel.DataModel;
 import FileContent.Student;
-import FileTools.Tools;
+import FileTools.FileTools;
+import FileTools.DataTools;
 import Repository.StudentRepo;
 import Exception.FileIOException;
 
 import javax.swing.*;
 import javax.swing.table.*;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -35,6 +37,13 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     JMenuItem saveObjectFile;
     JMenuItem readObjectFile;
     JMenuItem clear;
+
+    JTextArea highestScoreArea;
+    JTextArea averageScoreArea;
+    JLabel highestSocreLabel;
+    JLabel averageScoreLabel;
+
+    boolean isAnalyViewComponentsSetUp = false;
 
     public StudentClient() {
         chooser = new JFileChooser();
@@ -69,11 +78,20 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
                 if(response == JFileChooser.APPROVE_OPTION) {
                     file = chooser.getSelectedFile();
                     try {
-                        Tools.readTXTFile(file, StudentRepo.getStudentList());
+                        FileTools.readTXTFile(file, StudentRepo.getStudentList());
                         refreshTable();
+
+                        if(analyView != null) {
+                            if(!isAnalyViewComponentsSetUp)
+                                setUpAnalyViewComponents();
+                            else
+                                refreshAnalyView();
+                        }
+
                         saveObjectFile.setEnabled(true);
+                        readObjectFile.setEnabled(false);
                         clear.setEnabled(true);
-                        Tools.outputList(StudentRepo.getStudentList().getStudents());
+                        FileTools.outputList(StudentRepo.getStudentList().getStudents());
                     } catch (FileIOException ee) {
                         ee.showMessageDialog();
                         disableAllJmenuItems();
@@ -93,12 +111,14 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         saveObjectFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                try {
-                    Tools.saveObjectFile(file, StudentRepo.getStudentList());
-                    readObjectFile.setEnabled(true);
-                } catch (FileIOException ee) {
-                    readObjectFile.setEnabled(false);
-                    ee.showMessageDialog();
+                if(saveObjectFile.isEnabled()) {
+                    try {
+                        FileTools.saveObjectFile(file, StudentRepo.getStudentList());
+                        readObjectFile.setEnabled(true);
+                    } catch (FileIOException ee) {
+                        readObjectFile.setEnabled(false);
+                        ee.showMessageDialog();
+                    }
                 }
 
             }
@@ -107,12 +127,14 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         readObjectFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                try {
-                    Tools.readObjectFile(file,StudentRepo.getStudentList());
-                    refreshTable();
-                    Tools.outputList(StudentRepo.getStudentList().getStudents());
-                } catch (FileIOException ee) {
-                    ee.showMessageDialog();
+                if(readObjectFile.isEnabled()) {
+                    try {
+                        FileTools.readObjectFile(file, StudentRepo.getStudentList());
+                        refreshTable();
+                        FileTools.outputList(StudentRepo.getStudentList().getStudents());
+                    } catch (FileIOException ee) {
+                        ee.showMessageDialog();
+                    }
                 }
             }
         });
@@ -120,7 +142,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         clear.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                Tools.removeData();
+                FileTools.removeData();
                 refreshTable();
                 disableAllJmenuItems();
             }
@@ -129,7 +151,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         fileMenu.add(openTxtFile);
         fileMenu.add(saveObjectFile);
         fileMenu.add(readObjectFile);
-        fileMenu.add(clear);
+        //fileMenu.add(clear);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
@@ -170,19 +192,24 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         analyPanel.setBorder(BorderFactory.createLoweredBevelBorder());
         analyPanel.setLayout(null);
 
-        // Set Label
+        // Set Title
         JLabel label = new JLabel("Data Analysis");
         label.setFont(new Font("Helvetica", Font.BOLD,14));
         label.setBounds(10,10,100,20);
         label.setVisible(true);
 
-        // Set Panel
+        // Set AnalyViewPanel
         analyView = new JPanel();
         analyView.setBorder(BorderFactory.createLoweredBevelBorder());
         analyView.setBounds(CONS.analyViewX,CONS.analyViewY,CONS.analyViewWidth,CONS.analyViewHeight);
         analyView.setVisible(true);
-        analyPanel.add(analyView);
+        analyView.setLayout(null);
 
+        // Set AnalyViewComponents
+        if(!StudentRepo.getStudentList().getStudents().isEmpty())
+            setUpAnalyViewComponents();
+
+        analyPanel.add(analyView);
         analyPanel.add(label);
         add(analyPanel);
         analyPanel.setVisible(true);
@@ -228,12 +255,70 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         scorePanel.add(table);
     }
 
+    private void setUpHighestScoreLabel() {
+        highestSocreLabel = new JLabel();
+        highestSocreLabel.setBounds(CONS.highestScoreLabelX,CONS.highestScoreLabelY,CONS.highestScoreLabelWidth,CONS.highestScoreLabelHeight);
+        highestSocreLabel.setText("HighestScore");
+        highestSocreLabel.setVisible(true);
+    }
+
+    private void setUpHighestScoreArea() {
+        highestScoreArea = new JTextArea();
+        highestScoreArea.setBounds(CONS.highestScoreAreaX,CONS.highestScoreAreaY,CONS.highestScoreAreaWidth,CONS.highestScoreAreaHeight);
+        Student student = DataTools.getHighestStudent();
+        highestScoreArea.setText(String.valueOf(student.getScore()));
+        highestScoreArea.setVisible(true);
+        highestScoreArea.setEditable(false);
+    }
+
+    private void setUpAverageScoreLabel() {
+        averageScoreLabel = new JLabel();
+        averageScoreLabel.setBounds(CONS.averageScoreLabelX,CONS.averageScoreLabelY,CONS.highestScoreLabelWidth,CONS.highestScoreLabelHeight);
+        averageScoreLabel.setText("AverageScore");
+        averageScoreLabel.setVisible(true);
+    }
+
+    private void setUpAverageScoreArea() {
+        averageScoreArea = new JTextArea();
+        averageScoreArea.setBounds(CONS.averageScoreAreaX,CONS.averageScoreAreaY,CONS.averageScoreAreaWidth,CONS.averageScoreAreaHeight);
+        String average = DataTools.getAverageScore();
+        averageScoreArea.setText(average);
+        averageScoreArea.setVisible(true);
+        averageScoreArea.setEditable(false);
+    }
+
+    private void setUpAnalyViewComponents() {
+
+        if(!isAnalyViewComponentsSetUp)
+            isAnalyViewComponentsSetUp = true;
+
+        setUpHighestScoreLabel();
+        setUpHighestScoreArea();
+        setUpAverageScoreLabel();
+        setUpAverageScoreArea();
+
+        addComponentsToAnalyView();
+
+    }
+
+    private void addComponentsToAnalyView() {
+        analyView.add(highestScoreArea);
+        analyView.add(highestSocreLabel);
+        analyView.add(averageScoreLabel);
+        analyView.add(averageScoreArea);
+    }
 
     private void refreshTable() {
         if(table != null) {
             table.validate();
             table.updateUI();
         }
+    }
+
+    private void refreshAnalyView() {
+        Student student = DataTools.getHighestStudent();
+        highestScoreArea.setText(String.valueOf(student.getScore()));
+        averageScoreArea.setText(DataTools.getAverageScore());
     }
 
     private void disableAllJmenuItems() {

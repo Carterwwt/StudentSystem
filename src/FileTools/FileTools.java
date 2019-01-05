@@ -12,9 +12,9 @@ import java.util.Scanner;
 
 import Exception.FileIOException;
 
-public class Tools {
+public class FileTools {
 
-    private Tools(){
+    private FileTools(){
 
     }
 
