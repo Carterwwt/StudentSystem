@@ -8,6 +8,7 @@ import FileTools.FileTools;
 import FileTools.DataTools;
 import Repository.StudentRepo;
 import Exception.FileIOException;
+import sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -40,12 +41,6 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     JTextField highestScoreArea;
     JTextField lowestScoreArea;
     JTextField averageScoreArea;
-
-    JTextField perTextAPlus;
-    JTextField perTextA;
-    JTextField perTextB;
-    JTextField perTextC;
-    JTextField perTextD;
 
     JTextField[] numOfStu;
     JTextField[] perOfGrade;
@@ -410,6 +405,12 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         perOfGrade[3] = new JTextField(String.format("%.2f",percentage.getPercentOfC()));
         perOfGrade[4] = new JTextField(String.format("%.2f",percentage.getPercentOfD()));
 
+        for(int i=0;i<5;i++) {
+            perOfGrade[i].setBounds(320,CONS.APlusY + i*40,55,20);
+            perOfGrade[i].setVisible(true);
+            perOfGrade[i].setHorizontalAlignment(JTextField.RIGHT);
+        }
+
     }
 
     private void addComponentsToAnalyView() {
@@ -430,6 +431,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             analyView.add(takeUp[i]);
             analyView.add(percentage[i]);
             analyView.add(numOfStu[i]);
+            analyView.add(perOfGrade[i]);
         }
 
     }
@@ -447,6 +449,20 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         Student lowestStudent = DataTools.getLowestStudent();
         lowestScoreArea.setText(String.valueOf(lowestStudent.getScore()));
         averageScoreArea.setText(DataTools.getAverageScore());
+
+        Percentage percentage = DataTools.getPercentage();
+        numOfStu[0].setText(String.valueOf(percentage.getNumOfGradeAPlus()));
+        numOfStu[1].setText(String.valueOf(percentage.getNumOfGradeA()));
+        numOfStu[2].setText(String.valueOf(percentage.getNumOfGradeB()));
+        numOfStu[3].setText(String.valueOf(percentage.getNumOfGradeC()));
+        numOfStu[4].setText(String.valueOf(percentage.getNumOfGradeD()));
+
+        perOfGrade[0].setText(String.format("%.2f",percentage.getPercentOfAPlus()));
+        perOfGrade[1].setText(String.format("%.2f",percentage.getPercentOfA()));
+        perOfGrade[2].setText(String.format("%.2f",percentage.getPercentOfB()));
+        perOfGrade[3].setText(String.format("%.2f",percentage.getPercentOfC()));
+        perOfGrade[4].setText(String.format("%.2f",percentage.getPercentOfD()));
+
     }
 
     private void disableAllJmenuItems() {
