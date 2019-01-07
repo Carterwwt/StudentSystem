@@ -1,6 +1,6 @@
 package Repository;
 
-import FileContent.StudentList;
+import DataStructure.StudentList;
 
 public class StudentRepo {
 

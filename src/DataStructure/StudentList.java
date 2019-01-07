@@ -1,6 +1,5 @@
-package FileContent;
+package DataStructure;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 public class StudentList {

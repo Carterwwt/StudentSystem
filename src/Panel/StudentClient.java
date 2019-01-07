@@ -1,8 +1,9 @@
 package Panel;
 
 import CONSTANT.CONS;
-import DataModel.DataModel;
-import FileContent.Student;
+import DataStructure.Percentage;
+import TableDataModel.DataModel;
+import DataStructure.Student;
 import FileTools.FileTools;
 import FileTools.DataTools;
 import Repository.StudentRepo;
@@ -10,12 +11,10 @@ import Exception.FileIOException;
 
 import javax.swing.*;
 import javax.swing.table.*;
-import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
 
 @SuppressWarnings("all")
 
@@ -38,10 +37,29 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     JMenuItem readObjectFile;
     JMenuItem clear;
 
-    JTextArea highestScoreArea;
-    JTextArea averageScoreArea;
+    JTextField highestScoreArea;
+    JTextField lowestScoreArea;
+    JTextField averageScoreArea;
+
+    JTextField perTextAPlus;
+    JTextField perTextA;
+    JTextField perTextB;
+    JTextField perTextC;
+    JTextField perTextD;
+
+    JTextField[] numOfStu;
+
     JLabel highestSocreLabel;
+    JLabel lowestScoreLabel;
     JLabel averageScoreLabel;
+    JLabel APlusLabel;
+    JLabel ALabel;
+    JLabel BLabel;
+    JLabel CLabel;
+    JLabel DLabel;
+
+    JLabel[] takeUp;
+    JLabel[] percentage;
 
     boolean isAnalyViewComponentsSetUp = false;
 
@@ -78,6 +96,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
                 if(response == JFileChooser.APPROVE_OPTION) {
                     file = chooser.getSelectedFile();
                     try {
+
                         FileTools.readTXTFile(file, StudentRepo.getStudentList());
                         refreshTable();
 
@@ -246,7 +265,6 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             }
         };
 
-        ArrayList<Student> list = StudentRepo.getStudentList().getStudents();
 
         for(int i=0;i<3;i++) {
             table.getColumn(CONS.column[i]).setCellRenderer(renderer);
@@ -257,55 +275,154 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
 
     private void setUpHighestScoreLabel() {
         highestSocreLabel = new JLabel();
-        highestSocreLabel.setBounds(CONS.highestScoreLabelX,CONS.highestScoreLabelY,CONS.highestScoreLabelWidth,CONS.highestScoreLabelHeight);
-        highestSocreLabel.setText("HighestScore");
+        highestSocreLabel.setBounds(CONS.dataLabelX,CONS.highestY,CONS.dataLabelWidth,CONS.dataHeight);
+        highestSocreLabel.setText("Highest Score");
         highestSocreLabel.setVisible(true);
     }
 
     private void setUpHighestScoreArea() {
-        highestScoreArea = new JTextArea();
-        highestScoreArea.setBounds(CONS.highestScoreAreaX,CONS.highestScoreAreaY,CONS.highestScoreAreaWidth,CONS.highestScoreAreaHeight);
+        highestScoreArea = new JTextField();
+        highestScoreArea.setBounds(CONS.dataAreaX,CONS.highestY,CONS.dataAreaWidth,CONS.dataHeight);
         Student student = DataTools.getHighestStudent();
         highestScoreArea.setText(String.valueOf(student.getScore()));
+        highestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
         highestScoreArea.setVisible(true);
         highestScoreArea.setEditable(false);
     }
 
+    private void setUpLowestScoreLabel() {
+        lowestScoreLabel = new JLabel();
+        lowestScoreLabel.setBounds(CONS.dataLabelX,CONS.lowestY,CONS.dataLabelWidth,CONS.dataHeight);
+        lowestScoreLabel.setText("Lowest Score");
+        lowestScoreLabel.setVisible(true);
+    }
+
+    private void setUpLowestScoreArea() {
+        lowestScoreArea = new JTextField();
+        lowestScoreArea.setBounds(CONS.dataAreaX,CONS.lowestY,CONS.dataAreaWidth,CONS.dataHeight);
+        Student student = DataTools.getLowestStudent();
+        lowestScoreArea.setText(String.valueOf(student.getScore()));
+        lowestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
+        lowestScoreArea.setVisible(true);
+        lowestScoreArea.setEditable(false);
+    }
+
     private void setUpAverageScoreLabel() {
         averageScoreLabel = new JLabel();
-        averageScoreLabel.setBounds(CONS.averageScoreLabelX,CONS.averageScoreLabelY,CONS.highestScoreLabelWidth,CONS.highestScoreLabelHeight);
-        averageScoreLabel.setText("AverageScore");
+        averageScoreLabel.setBounds(CONS.dataLabelX,CONS.averageY,CONS.dataLabelWidth,CONS.dataHeight);
+        averageScoreLabel.setText("Average Score");
         averageScoreLabel.setVisible(true);
     }
 
     private void setUpAverageScoreArea() {
-        averageScoreArea = new JTextArea();
-        averageScoreArea.setBounds(CONS.averageScoreAreaX,CONS.averageScoreAreaY,CONS.averageScoreAreaWidth,CONS.averageScoreAreaHeight);
+        averageScoreArea = new JTextField();
+        averageScoreArea.setBounds(CONS.dataAreaX,CONS.averageY,CONS.dataAreaWidth,CONS.dataHeight);
         String average = DataTools.getAverageScore();
+        averageScoreArea.setHorizontalAlignment(JTextField.RIGHT);
         averageScoreArea.setText(average);
         averageScoreArea.setVisible(true);
         averageScoreArea.setEditable(false);
     }
+
 
     private void setUpAnalyViewComponents() {
 
         if(!isAnalyViewComponentsSetUp)
             isAnalyViewComponentsSetUp = true;
 
+        // high low average
         setUpHighestScoreLabel();
         setUpHighestScoreArea();
+        setUpLowestScoreLabel();
+        setUpLowestScoreArea();
         setUpAverageScoreLabel();
         setUpAverageScoreArea();
 
+        // percentage
+        setUpPercentage();
+
         addComponentsToAnalyView();
+
+    }
+
+    private void setUpPercentage() {
+        Percentage percentage = DataTools.getPercentage();
+        setUpPercentageLabel();
+        setUpPercentageData(percentage);
+    }
+
+    private void setUpPercentageLabel() {
+        APlusLabel = new JLabel("Grade A+ (90-100)");
+        ALabel = new JLabel("Grade A (80-89)");
+        BLabel = new JLabel("Grade B (70-79)");
+        CLabel = new JLabel("Grade C (60-69)");
+        DLabel = new JLabel("Grade D (0-60)");
+
+        APlusLabel.setBounds(CONS.dataLabelX,CONS.APlusY,CONS.gradeLabelWidth,CONS.dataHeight);
+        APlusLabel.setVisible(true);
+        ALabel.setBounds(CONS.dataLabelX,CONS.AY,CONS.gradeLabelWidth,CONS.dataHeight);
+        ALabel.setVisible(true);
+        BLabel.setBounds(CONS.dataLabelX,CONS.BY,CONS.gradeLabelWidth,CONS.dataHeight);
+        BLabel.setVisible(true);
+        CLabel.setBounds(CONS.dataLabelX,CONS.CY,CONS.gradeLabelWidth,CONS.dataHeight);
+        CLabel.setVisible(true);
+        DLabel.setBounds(CONS.dataLabelX,CONS.DY,CONS.gradeLabelWidth,CONS.dataHeight);
+        DLabel.setVisible(true);
+
+        takeUp = new JLabel[5];
+        for(int i=0;i<5;i++) {
+            takeUp[i] = new JLabel("takes up");
+            takeUp[i].setBounds(CONS.gradeLabelX,CONS.APlusY + i*40,CONS.gradePerWidth,CONS.dataHeight);
+            takeUp[i].setVisible(true);
+        }
+
+        percentage = new JLabel[5];
+        for(int i=0;i<5;i++) {
+            percentage[i] = new JLabel("%");
+            percentage[i].setBounds(CONS.percentageX,CONS.APlusY + i*40,50,20);
+            percentage[i].setVisible(true);
+        }
+
+    }
+
+    private void setUpPercentageData(Percentage percentage) {
+
+        numOfStu = new JTextField[5];
+
+        numOfStu[0] = new JTextField(String.valueOf(percentage.getNumOfGradeAPlus()));
+        numOfStu[1] = new JTextField(String.valueOf(percentage.getNumOfGradeA()));
+        numOfStu[2] = new JTextField(String.valueOf(percentage.getNumOfGradeB()));
+        numOfStu[3] = new JTextField(String.valueOf(percentage.getNumOfGradeC()));
+        numOfStu[4] = new JTextField(String.valueOf(percentage.getNumOfGradeD()));
+
+        for(int i=0;i<5;i++) {
+            numOfStu[i].setBounds(CONS.dataAreaX,CONS.APlusY + i*40,CONS.dataAreaWidth,CONS.dataHeight);
+            numOfStu[i].setVisible(true);
+            numOfStu[i].setHorizontalAlignment(JTextField.RIGHT);
+        }
 
     }
 
     private void addComponentsToAnalyView() {
         analyView.add(highestScoreArea);
         analyView.add(highestSocreLabel);
+        analyView.add(lowestScoreLabel);
+        analyView.add(lowestScoreArea);
         analyView.add(averageScoreLabel);
         analyView.add(averageScoreArea);
+
+        analyView.add(APlusLabel);
+        analyView.add(ALabel);
+        analyView.add(BLabel);
+        analyView.add(CLabel);
+        analyView.add(DLabel);
+
+        for(int i=0;i<5;i++) {
+            analyView.add(takeUp[i]);
+            analyView.add(percentage[i]);
+            analyView.add(numOfStu[i]);
+        }
+
     }
 
     private void refreshTable() {
@@ -316,8 +433,10 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     }
 
     private void refreshAnalyView() {
-        Student student = DataTools.getHighestStudent();
-        highestScoreArea.setText(String.valueOf(student.getScore()));
+        Student highestStudent = DataTools.getHighestStudent();
+        highestScoreArea.setText(String.valueOf(highestStudent.getScore()));
+        Student lowestStudent = DataTools.getLowestStudent();
+        lowestScoreArea.setText(String.valueOf(lowestStudent.getScore()));
         averageScoreArea.setText(DataTools.getAverageScore());
     }
 

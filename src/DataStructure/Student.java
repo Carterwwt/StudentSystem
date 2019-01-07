@@ -1,4 +1,4 @@
-package FileContent;
+package DataStructure;
 
 import java.io.Serializable;
 

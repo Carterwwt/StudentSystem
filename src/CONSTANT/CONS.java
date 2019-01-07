@@ -27,27 +27,30 @@ public class CONS {
     public static final int analyViewWidth = 430;
     public static final int analyViewHeight = 400;
 
-    // highestScoreArea
-    public static final int highestScoreAreaWidth = 40;
-    public static final int highestScoreAreaHeight = 20;
-    public static final int highestScoreAreaX = analyViewWidth/2 - highestScoreAreaWidth/2 + 20;
-    public static final int highestScoreAreaY = 20;
+    // highestY
+    public static final int highestY = 20;
 
-    // highestScoreLabel
-    public static final int highestScoreLabelWidth = 120;
-    public static final int highestScoreLabelHeight = 20;
-    public static final int highestScoreLabelX = analyViewWidth/2 - highestScoreLabelWidth + 20;
-    public static final int highestScoreLabelY = 20;
+    // lowestY
+    public static final int lowestY = 60;
 
-    // averageScoreArea
-    public static final int averageScoreAreaWidth = 50;
-    public static final int averageScoreAreaHeight = 20;
-    public static final int averageScoreAreaX = analyViewWidth/2 - averageScoreAreaWidth/2 + 20;
-    public static final int averageScoreAreaY = 50;
+    // averageY
+    public static final int averageY = 100;
 
-    // averageScoreLabel
-    public static final int averageScoreLabelWidth = 120;
-    public static final int averageScoreLabelHeight = 20;
-    public static final int averageScoreLabelX = analyViewWidth/2 - averageScoreLabelWidth + 20;
-    public static final int averageScoreLabelY = 50;
+    // dataLabel dataArea
+    public static final int dataLabelX = 20;
+    public static final int dataAreaX = 185;
+    public static final int dataLabelWidth = 120;
+    public static final int dataAreaWidth = 60;
+    public static final int dataHeight = 20;
+
+    // gradeLabel
+    public static final int APlusY = 150;
+    public static final int AY = 190;
+    public static final int BY = 230;
+    public static final int CY = 270;
+    public static final int DY = 310;
+    public static final int gradeLabelX = 255;
+    public static final int gradeLabelWidth = 140;
+    public static final int gradePerWidth = 80;
+    public static final int percentageX = 380;
 }

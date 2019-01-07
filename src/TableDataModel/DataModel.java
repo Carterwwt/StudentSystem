@@ -1,7 +1,7 @@
-package DataModel;
+package TableDataModel;
 
 import CONSTANT.CONS;
-import FileContent.Student;
+import DataStructure.Student;
 import Repository.StudentRepo;
 
 import javax.swing.table.AbstractTableModel;

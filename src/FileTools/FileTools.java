@@ -1,14 +1,13 @@
 package FileTools;
 
-import FileContent.Student;
-import FileContent.StudentList;
+import DataStructure.Student;
+import DataStructure.StudentList;
 import Repository.StudentRepo;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Scanner;
 
 import Exception.FileIOException;
 

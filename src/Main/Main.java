@@ -1,6 +1,6 @@
 package Main;
 
-import FileContent.StudentList;
+import DataStructure.StudentList;
 import Panel.StudentClient;
 import Repository.StudentRepo;
 
