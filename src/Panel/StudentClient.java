@@ -48,6 +48,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     JTextField perTextD;
 
     JTextField[] numOfStu;
+    JTextField[] perOfGrade;
 
     JLabel highestSocreLabel;
     JLabel lowestScoreLabel;
@@ -400,6 +401,14 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             numOfStu[i].setVisible(true);
             numOfStu[i].setHorizontalAlignment(JTextField.RIGHT);
         }
+
+        perOfGrade = new JTextField[5];
+
+        perOfGrade[0] = new JTextField(String.format("%.2f",percentage.getPercentOfAPlus()));
+        perOfGrade[1] = new JTextField(String.format("%.2f",percentage.getPercentOfA()));
+        perOfGrade[2] = new JTextField(String.format("%.2f",percentage.getPercentOfB()));
+        perOfGrade[3] = new JTextField(String.format("%.2f",percentage.getPercentOfC()));
+        perOfGrade[4] = new JTextField(String.format("%.2f",percentage.getPercentOfD()));
 
     }
 
