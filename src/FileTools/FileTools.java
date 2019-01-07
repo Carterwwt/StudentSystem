@@ -68,8 +68,7 @@ public class FileTools {
 
     public static void readObjectFile(File file, StudentList studentList) throws FileIOException {
 
-
-        if(file.exists()) {
+        if(file.exists() && file.isFile()) {
             try {
                 FileInputStream fileIn = new FileInputStream(file);
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn);

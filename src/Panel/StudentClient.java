@@ -128,7 +128,6 @@ public class StudentClient extends JFrame {
 
                         saveTxtFile.setEnabled(true);
                         saveObjectFile.setEnabled(true);
-                        readObjectFile.setEnabled(false);
                         clear.setEnabled(true);
                         FileTools.outputList(StudentRepo.getStudentList().getStudents());
                     } catch (FileIOException ee) {
@@ -194,14 +193,23 @@ public class StudentClient extends JFrame {
             public void mousePressed(MouseEvent e) {
                 if(readObjectFile.isEnabled()) {
                     try {
-
-                        int response = chooser.showSaveDialog(menuBar);
-
-
-                        FileTools.readObjectFile(fileOpened, StudentRepo.getStudentList());
-                        refreshTable();
-                        FileTools.outputList(StudentRepo.getStudentList().getStudents());
+                        int response = chooser.showOpenDialog(menuBar);
+                        if(response == JFileChooser.APPROVE_OPTION) {
+                            fileOpened = chooser.getSelectedFile();
+                            FileTools.readObjectFile(fileOpened,StudentRepo.getStudentList());
+                            if(scorePanel == null && analyPanel == null && bottomPanel == null) {
+                                setUpScorePanel();
+                                setUpAnalyPanel();
+                                setUpBottomPanel();
+                            }
+                            clear.setEnabled(true);
+                            saveObjectFile.setEnabled(true);
+                            refreshTable();
+                            repaint();
+                            FileTools.outputList(StudentRepo.getStudentList().getStudents());
+                        }
                     } catch (FileIOException ee) {
+                        disableAllJmenuItems();
                         ee.showMessageDialog();
                     }
                 }
@@ -223,8 +231,8 @@ public class StudentClient extends JFrame {
         fileMenu.add(openTxtFile);
         fileMenu.add(saveTxtFile);
         fileMenu.addSeparator();
-        fileMenu.add(saveObjectFile);
         fileMenu.add(readObjectFile);
+        fileMenu.add(saveObjectFile);
         fileMenu.addSeparator();
         fileMenu.add(clear);
         menuBar.add(fileMenu);
