@@ -68,7 +68,6 @@ public class FileTools {
 
     public static void readObjectFile(File file, StudentList studentList) throws FileIOException {
 
-        file = new File(file.getName().replace(".txt",".score"));
 
         if(file.exists()) {
             try {
@@ -83,16 +82,18 @@ public class FileTools {
             catch (ClassNotFoundException e) {
                 throw (new FileIOException("Can't get a object"));
             }
+        } else {
+            throw (new FileIOException("File not existed!"));
         }
         System.out.println("Read Object File Successfully!");
         //outputList(studentList);
     }
 
     public static void saveObjectFile(File file, StudentList studentList) throws FileIOException {
-        file = new File(file.getName().replace(".txt",".score"));
 
-        if(file.exists()) {
+        if(!file.exists()) {
             try {
+                file.createNewFile();
                 FileOutputStream fileOut = new FileOutputStream(file);
                 ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
                 objectOut.writeObject(studentList.getStudents());
@@ -102,7 +103,10 @@ public class FileTools {
                 e.printStackTrace();
                 throw (new FileIOException("Save Object File Error!"));
             }
+        } else {
+            throw(new FileIOException("File already existed!"));
         }
+
         System.out.println("Save Object File Successfully!");
         System.out.println("---------------------------------------");
     }

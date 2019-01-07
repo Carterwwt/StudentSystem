@@ -68,11 +68,11 @@ public class DataTools {
             else
                 numOfGradeD++;
         }
-        percentOfAPlus = numOfGradeAPlus*1.0/totalStudent;
-        percentOfA = numOfGradeA*1.0/totalStudent;
-        percentOfB = numOfGradeB*1.0/totalStudent;
-        percentOfC = numOfGradeC*1.0/totalStudent;
-        percentOfD = numOfGradeD*1.0/totalStudent;
+        percentOfAPlus = numOfGradeAPlus*100.0/totalStudent;
+        percentOfA = numOfGradeA*100.0/totalStudent;
+        percentOfB = numOfGradeB*100.0/totalStudent;
+        percentOfC = numOfGradeC*100.0/totalStudent;
+        percentOfD = numOfGradeD*100.0/totalStudent;
 
         Percentage percentage = new Percentage(numOfGradeAPlus,numOfGradeA,numOfGradeB,numOfGradeC,numOfGradeD,percentOfAPlus,percentOfA,percentOfB,percentOfC,percentOfD);
         return percentage;

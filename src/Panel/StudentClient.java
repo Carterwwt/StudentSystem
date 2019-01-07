@@ -8,9 +8,10 @@ import FileTools.FileTools;
 import FileTools.DataTools;
 import Repository.StudentRepo;
 import Exception.FileIOException;
-import sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -19,21 +20,29 @@ import java.io.File;
 
 @SuppressWarnings("all")
 
-public class StudentClient extends JFrame {//I can't find the problem!!! Or there is no big here!
+public class StudentClient extends JFrame {
+
+    //I can't find the problem!!! Or there is no big here!
 
     JPanel scorePanel;
     JPanel analyPanel;
     JPanel analyView;
+    JPanel bottomPanel;
     JScrollPane scroll;
     JTable table;
+
     JFileChooser chooser;
-    File file;
+    JFileChooser saver;
+    File fileOpened;
+    File fileToBeSaved;
+
     AbstractTableModel dataModel;
 
     JMenuBar menuBar;
     JMenu fileMenu;
 
     JMenuItem openTxtFile;
+    JMenuItem saveTxtFile;
     JMenuItem saveObjectFile;
     JMenuItem readObjectFile;
     JMenuItem clear;
@@ -54,14 +63,18 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     JLabel CLabel;
     JLabel DLabel;
 
+    JLabel filePath;
+
     JLabel[] takeUp;
     JLabel[] percentage;
+
 
     boolean isAnalyViewComponentsSetUp = false;
 
     public StudentClient() {
         chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        saver = new JFileChooser();
         setLayout(null);
         setTitle("学生成绩管理系统------Created By CarterWang");
         setBounds(400,200, CONS.frameWidth,CONS.frameHeight);
@@ -77,12 +90,13 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         fileMenu = new JMenu("File");
 
         openTxtFile = new JMenuItem("Open TXT file");
-        saveObjectFile = new JMenuItem("Save Object file");
-        readObjectFile = new JMenuItem("Read Object file");
+        saveTxtFile = new JMenuItem("Save TXT file to");
+        saveObjectFile = new JMenuItem("Save Object file to");
+        readObjectFile = new JMenuItem("Open Object file");
         clear = new JMenuItem("Clear");
 
+        saveTxtFile.setEnabled(false);
         saveObjectFile.setEnabled(false);
-        readObjectFile.setEnabled(false);
         clear.setEnabled(false);
 
         openTxtFile.addMouseListener(new MouseAdapter() {
@@ -90,19 +104,29 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             public void mousePressed(MouseEvent e) {
                 int response = chooser.showOpenDialog(menuBar);
                 if(response == JFileChooser.APPROVE_OPTION) {
-                    file = chooser.getSelectedFile();
+                    fileOpened = chooser.getSelectedFile();
                     try {
 
-                        FileTools.readTXTFile(file, StudentRepo.getStudentList());
-                        refreshTable();
+                        FileTools.readTXTFile(fileOpened, StudentRepo.getStudentList());
 
-                        if(analyView != null) {
-                            if(!isAnalyViewComponentsSetUp)
-                                setUpAnalyViewComponents();
-                            else
-                                refreshAnalyView();
+                        if(scorePanel == null && analyPanel == null && bottomPanel == null) {
+                            setUpScorePanel();
+                            setUpAnalyPanel();
+                            setUpBottomPanel();
                         }
 
+                        refreshTable();
+                        refreshBottomPanel();
+
+                        if(!isAnalyViewComponentsSetUp)
+                            setUpAnalyViewComponents();
+                        else
+                            refreshAnalyView();
+
+                        if(bottomPanel != null)
+                            refreshBottomPanel();
+
+                        saveTxtFile.setEnabled(true);
                         saveObjectFile.setEnabled(true);
                         readObjectFile.setEnabled(false);
                         clear.setEnabled(true);
@@ -111,14 +135,28 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
                         ee.showMessageDialog();
                         disableAllJmenuItems();
                     }
-                    if(scorePanel == null && analyPanel == null) {
-                        setUpScorePanel();
-                        setUpAnalyPanel();
-                        repaint();
-                    } else {
-                        repaint();
-                    }
+                    repaint();
 
+                }
+            }
+        });
+
+        saveTxtFile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if(saveTxtFile.isEnabled()) {
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                            "TXT文件(*.txt)", ".txt");
+                    saver.setFileFilter(filter);
+
+                    int respone = saver.showSaveDialog(menuBar);
+                    if(respone == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = saver.getSelectedFile();
+                        FileFilter txtFilter = (FileNameExtensionFilter)saver.getFileFilter();
+                        fileToBeSaved = new File(selectedFile.getAbsolutePath() + ((FileNameExtensionFilter) txtFilter).getExtensions()[0]);
+
+                        System.out.println(fileToBeSaved.getAbsolutePath());
+                    }
                 }
             }
         });
@@ -128,10 +166,22 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             public void mousePressed(MouseEvent e) {
                 if(saveObjectFile.isEnabled()) {
                     try {
-                        FileTools.saveObjectFile(file, StudentRepo.getStudentList());
-                        readObjectFile.setEnabled(true);
+                        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                                "对象文件(*.score)", ".score");
+                        saver.setFileFilter(filter);
+
+                        int respone = saver.showSaveDialog(menuBar);
+                        if(respone == JFileChooser.APPROVE_OPTION) {
+
+                            File selectedFile = saver.getSelectedFile();
+                            FileFilter txtFilter = (FileNameExtensionFilter)saver.getFileFilter();
+                            fileToBeSaved = new File(selectedFile.getAbsolutePath() + ((FileNameExtensionFilter) txtFilter).getExtensions()[0]);
+
+                            System.out.println(fileToBeSaved.getAbsolutePath());
+                            // saveObjectFile
+                            FileTools.saveObjectFile(fileToBeSaved, StudentRepo.getStudentList());
+                        }
                     } catch (FileIOException ee) {
-                        readObjectFile.setEnabled(false);
                         ee.showMessageDialog();
                     }
                 }
@@ -144,7 +194,11 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             public void mousePressed(MouseEvent e) {
                 if(readObjectFile.isEnabled()) {
                     try {
-                        FileTools.readObjectFile(file, StudentRepo.getStudentList());
+
+                        int response = chooser.showSaveDialog(menuBar);
+
+
+                        FileTools.readObjectFile(fileOpened, StudentRepo.getStudentList());
                         refreshTable();
                         FileTools.outputList(StudentRepo.getStudentList().getStudents());
                     } catch (FileIOException ee) {
@@ -158,15 +212,21 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
             @Override
             public void mousePressed(MouseEvent e) {
                 FileTools.removeData();
+                fileOpened = null;
                 refreshTable();
+                refreshAnalyView();
+                refreshBottomPanel();
                 disableAllJmenuItems();
             }
         });
 
         fileMenu.add(openTxtFile);
+        fileMenu.add(saveTxtFile);
+        fileMenu.addSeparator();
         fileMenu.add(saveObjectFile);
         fileMenu.add(readObjectFile);
-        //fileMenu.add(clear);
+        fileMenu.addSeparator();
+        fileMenu.add(clear);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
@@ -231,13 +291,32 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
 
     }
 
+    private void setUpBottomPanel() {
+        bottomPanel = new JPanel();
+        bottomPanel.setBounds(20,600,CONS.frameWidth-60,40);
+        bottomPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+        bottomPanel.setLayout(null);
+
+        // filePath
+        filePath = new JLabel();
+        filePath.setBounds(5,7,600,20);
+        filePath.setFont(new Font("宋体", Font.PLAIN,13));
+        if(fileOpened != null)
+            filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
+        filePath.setVisible(true);
+
+        bottomPanel.add(filePath);
+        add(bottomPanel);
+        bottomPanel.setVisible(true);
+    }
+
     private void setUpTable() {
 
         dataModel = new DataModel();
 
         table = new JTable(dataModel);
-        table.setRowHeight(20);
-        table.setFont(new Font("宋体",Font.PLAIN,13));
+        table.setRowHeight(25);
+        table.setFont(new Font("宋体",Font.PLAIN,14));
         table.setRowSelectionAllowed(false);
         RowSorter<AbstractTableModel> rowSorter = new TableRowSorter<AbstractTableModel>(dataModel);
         table.setRowSorter(rowSorter);
@@ -247,6 +326,12 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         header.setPreferredSize(new Dimension(header.getWidth(),22));
         header.setFont(new Font("Helvetica",Font.PLAIN,14));
 
+        setUpCellRender();
+
+        scorePanel.add(table);
+    }
+
+    private void setUpCellRender() {
         // Set Cell Render
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer()// 设置表格间隔色
         {
@@ -265,8 +350,6 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
         for(int i=0;i<3;i++) {
             table.getColumn(CONS.column[i]).setCellRenderer(renderer);
         }
-
-        scorePanel.add(table);
     }
 
     private void setUpHighestScoreLabel() {
@@ -414,6 +497,7 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     }
 
     private void addComponentsToAnalyView() {
+
         analyView.add(highestScoreArea);
         analyView.add(highestSocreLabel);
         analyView.add(lowestScoreLabel);
@@ -437,13 +521,13 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
     }
 
     private void refreshTable() {
-        if(table != null) {
-            table.validate();
-            table.updateUI();
-        }
+        dataModel = new DataModel();
+        table.setModel(dataModel);
+        setUpCellRender();
     }
 
     private void refreshAnalyView() {
+
         Student highestStudent = DataTools.getHighestStudent();
         highestScoreArea.setText(String.valueOf(highestStudent.getScore()));
         Student lowestStudent = DataTools.getLowestStudent();
@@ -465,10 +549,20 @@ public class StudentClient extends JFrame {//I can't find the problem!!! Or ther
 
     }
 
+    private void refreshBottomPanel() {
+        if(filePath != null)
+            if(fileOpened != null)
+                filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
+            else
+                filePath.setText("");
+    }
+
     private void disableAllJmenuItems() {
-        saveObjectFile.setEnabled(false);
-        readObjectFile.setEnabled(false);
-        clear.setEnabled(false);
+        if(fileOpened == null) {
+            saveTxtFile.setEnabled(false);
+            saveObjectFile.setEnabled(false);
+            clear.setEnabled(false);
+        }
     }
 
 }

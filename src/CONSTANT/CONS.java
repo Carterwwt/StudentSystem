@@ -18,7 +18,7 @@ public class CONS {
     public static final int scorePanelY = frameMidY - scorePanelHeight/2 - 20;
 
     //AnalyPanel
-    public static final int analyPanelX = scorePanelX + scorePanelWidth + 25;
+    public static final int analyPanelX = scorePanelX + scorePanelWidth + 40;
     public static final int analyPanelY = scorePanelY;
     public static final int analyPanelWidth = 450;
     public static final int analyPanelHeight = 450;
