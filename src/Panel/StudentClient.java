@@ -14,16 +14,22 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
 @SuppressWarnings("all")
 
-public class StudentClient extends JFrame {
+public class StudentClient extends JFrame implements Runnable{
 
     //I can't find the problem!!! Or there is no big here!
 
+    TableRowSorter<AbstractTableModel> rowSorter;
+    Thread searchThread;
+
+    JPanel searchPanel;
     JPanel scorePanel;
     JPanel analyPanel;
     JPanel analyView;
@@ -47,6 +53,7 @@ public class StudentClient extends JFrame {
     JMenuItem readObjectFile;
     JMenuItem clear;
 
+    JTextField searchArea;
     JTextField highestScoreArea;
     JTextField lowestScoreArea;
     JTextField averageScoreArea;
@@ -54,6 +61,7 @@ public class StudentClient extends JFrame {
     JTextField[] numOfStu;
     JTextField[] perOfGrade;
 
+    JLabel searchLabel;
     JLabel highestSocreLabel;
     JLabel lowestScoreLabel;
     JLabel averageScoreLabel;
@@ -70,24 +78,34 @@ public class StudentClient extends JFrame {
 
 
     boolean isAnalyViewComponentsSetUp = false;
+    boolean beingUpdated = false;
 
     public StudentClient() {
-        chooser = new JFileChooser();
+        chooser = new JFileChooser(".");
         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        saver = new JFileChooser();
+        saver = new JFileChooser(".");
         setLayout(null);
+        setResizable(false);
         setTitle("学生成绩管理系统------Created By CarterWang");
         setBounds(400,200, CONS.frameWidth,CONS.frameHeight);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // set Menu
-        setUpMenu();
+        setUpAllPanel();
         setVisible(true);
+        searchThread = new Thread(this);
+        searchThread.start();
     }
 
-    private void setUpMenu() {
+    private void setUpAllPanel() {
+
+        FileTools.removeData();
+        setUpSearchPanel();
+        setUpScorePanel();
+        setUpAnalyPanel();
+        setUpBottomPanel();
 
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
+        menuBar.setBorderPainted(true);
 
         openTxtFile = new JMenuItem("Open TXT file");
         saveTxtFile = new JMenuItem("Save TXT file to");
@@ -102,6 +120,9 @@ public class StudentClient extends JFrame {
         openTxtFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+
+                beingUpdated = true;
+
                 int response = chooser.showOpenDialog(menuBar);
                 if(response == JFileChooser.APPROVE_OPTION) {
                     fileOpened = chooser.getSelectedFile();
@@ -109,22 +130,10 @@ public class StudentClient extends JFrame {
 
                         FileTools.readTXTFile(fileOpened, StudentRepo.getStudentList());
 
-                        if(scorePanel == null && analyPanel == null && bottomPanel == null) {
-                            setUpScorePanel();
-                            setUpAnalyPanel();
-                            setUpBottomPanel();
-                        }
-
                         refreshTable();
                         refreshBottomPanel();
-
-                        if(!isAnalyViewComponentsSetUp)
-                            setUpAnalyViewComponents();
-                        else
-                            refreshAnalyView();
-
-                        if(bottomPanel != null)
-                            refreshBottomPanel();
+                        refreshAnalyView();
+                        refreshBottomPanel();
 
                         saveTxtFile.setEnabled(true);
                         saveObjectFile.setEnabled(true);
@@ -135,7 +144,7 @@ public class StudentClient extends JFrame {
                         disableAllJmenuItems();
                     }
                     repaint();
-
+                    beingUpdated = false;
                 }
             }
         });
@@ -153,8 +162,12 @@ public class StudentClient extends JFrame {
                         File selectedFile = saver.getSelectedFile();
                         FileFilter txtFilter = (FileNameExtensionFilter)saver.getFileFilter();
                         fileToBeSaved = new File(selectedFile.getAbsolutePath() + ((FileNameExtensionFilter) txtFilter).getExtensions()[0]);
-
-                        System.out.println(fileToBeSaved.getAbsolutePath());
+                        try {
+                            FileTools.saveTXTFile(fileToBeSaved,StudentRepo.getStudentList());
+                        } catch (FileIOException ee) {
+                            ee.showMessageDialog();
+                        }
+                        System.out.println("File to be saved: " + fileToBeSaved.getAbsolutePath());
                     }
                 }
             }
@@ -191,20 +204,21 @@ public class StudentClient extends JFrame {
         readObjectFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+
+                beingUpdated = true;
+
                 if(readObjectFile.isEnabled()) {
                     try {
                         int response = chooser.showOpenDialog(menuBar);
                         if(response == JFileChooser.APPROVE_OPTION) {
                             fileOpened = chooser.getSelectedFile();
                             FileTools.readObjectFile(fileOpened,StudentRepo.getStudentList());
-                            if(scorePanel == null && analyPanel == null && bottomPanel == null) {
-                                setUpScorePanel();
-                                setUpAnalyPanel();
-                                setUpBottomPanel();
-                            }
+                            refreshAnalyView();
+                            refreshTable();
+                            refreshBottomPanel();
+                            saveTxtFile.setEnabled(true);
                             clear.setEnabled(true);
                             saveObjectFile.setEnabled(true);
-                            refreshTable();
                             repaint();
                             FileTools.outputList(StudentRepo.getStudentList().getStudents());
                         }
@@ -213,18 +227,27 @@ public class StudentClient extends JFrame {
                         ee.showMessageDialog();
                     }
                 }
+
+                beingUpdated = false;
+
             }
         });
 
         clear.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mousePressed(MouseEvent e) {
+                beingUpdated = true;
+
                 FileTools.removeData();
                 fileOpened = null;
+                fileToBeSaved = null;
                 refreshTable();
                 refreshAnalyView();
                 refreshBottomPanel();
                 disableAllJmenuItems();
+
+                beingUpdated = false;
             }
         });
 
@@ -238,6 +261,54 @@ public class StudentClient extends JFrame {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
+    }
+
+    private void setUpSearchPanel() {
+
+        searchPanel = new JPanel();
+        searchPanel.setLayout(null);
+        searchPanel.setBounds(15,2,CONS.frameWidth - 35,50);
+        searchPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+
+        setUpSearchTextField();
+        setUpSearchLabel();
+
+        add(searchPanel);
+    }
+
+    private void setUpSearchTextField() {
+        searchArea = new JTextField();
+        searchArea.setBounds(2,5,200,40);
+        searchArea.setFont(new Font("微软雅黑", Font.PLAIN,14));
+
+        searchArea.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_ENTER:
+                        updateSearchResult(searchArea.getText());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        searchPanel.add(searchArea);
+    }
+
+    private void setUpSearchLabel() {
+        searchLabel = new JLabel("输入查询(点击表头可排序)");
+        searchLabel.setFont(new Font("微软雅黑", Font.PLAIN,14));
+        searchLabel.setBounds(210,5,200,40);
+        searchPanel.add(searchLabel);
+    }
+
+    private void updateSearchResult(String regex) {
+        if(regex.contains("\\"))
+            rowSorter.setRowFilter(RowFilter.regexFilter("........"));
+        else
+            rowSorter.setRowFilter(RowFilter.regexFilter(regex));
     }
 
     private void setUpScorePanel() {
@@ -301,13 +372,13 @@ public class StudentClient extends JFrame {
 
     private void setUpBottomPanel() {
         bottomPanel = new JPanel();
-        bottomPanel.setBounds(20,600,CONS.frameWidth-60,40);
+        bottomPanel.setBounds(15,CONS.frameHeight - 90,CONS.frameWidth-33,40);
         bottomPanel.setBorder(BorderFactory.createRaisedBevelBorder());
         bottomPanel.setLayout(null);
 
         // filePath
         filePath = new JLabel();
-        filePath.setBounds(5,7,600,20);
+        filePath.setBounds(5,12,600,20);
         filePath.setFont(new Font("宋体", Font.PLAIN,13));
         if(fileOpened != null)
             filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
@@ -326,7 +397,7 @@ public class StudentClient extends JFrame {
         table.setRowHeight(25);
         table.setFont(new Font("宋体",Font.PLAIN,14));
         table.setRowSelectionAllowed(false);
-        RowSorter<AbstractTableModel> rowSorter = new TableRowSorter<AbstractTableModel>(dataModel);
+        rowSorter = new TableRowSorter<AbstractTableModel>(dataModel);
         table.setRowSorter(rowSorter);
 
         // Set header
@@ -439,6 +510,7 @@ public class StudentClient extends JFrame {
     }
 
     private void setUpPercentageLabel() {
+
         APlusLabel = new JLabel("Grade A+ (90-100)");
         ALabel = new JLabel("Grade A (80-89)");
         BLabel = new JLabel("Grade B (70-79)");
@@ -459,14 +531,14 @@ public class StudentClient extends JFrame {
         takeUp = new JLabel[5];
         for(int i=0;i<5;i++) {
             takeUp[i] = new JLabel("takes up");
-            takeUp[i].setBounds(CONS.gradeLabelX,CONS.APlusY + i*40,CONS.gradePerWidth,CONS.dataHeight);
+            takeUp[i].setBounds(CONS.gradeLabelX,CONS.APlusY + i*50,CONS.gradePerWidth,CONS.dataHeight);
             takeUp[i].setVisible(true);
         }
 
         percentage = new JLabel[5];
         for(int i=0;i<5;i++) {
             percentage[i] = new JLabel("%");
-            percentage[i].setBounds(CONS.percentageX,CONS.APlusY + i*40,50,20);
+            percentage[i].setBounds(CONS.percentageX,CONS.APlusY + i*50,50,CONS.dataHeight);
             percentage[i].setVisible(true);
         }
 
@@ -483,8 +555,9 @@ public class StudentClient extends JFrame {
         numOfStu[4] = new JTextField(String.valueOf(percentage.getNumOfGradeD()));
 
         for(int i=0;i<5;i++) {
-            numOfStu[i].setBounds(CONS.dataAreaX,CONS.APlusY + i*40,CONS.dataAreaWidth,CONS.dataHeight);
+            numOfStu[i].setBounds(CONS.dataAreaX,CONS.APlusY + i*50,CONS.dataAreaWidth,CONS.dataHeight);
             numOfStu[i].setVisible(true);
+            numOfStu[i].setEditable(false);
             numOfStu[i].setHorizontalAlignment(JTextField.RIGHT);
         }
 
@@ -497,8 +570,9 @@ public class StudentClient extends JFrame {
         perOfGrade[4] = new JTextField(String.format("%.2f",percentage.getPercentOfD()));
 
         for(int i=0;i<5;i++) {
-            perOfGrade[i].setBounds(320,CONS.APlusY + i*40,55,20);
+            perOfGrade[i].setBounds(320,CONS.APlusY + i*50,55,CONS.dataHeight);
             perOfGrade[i].setVisible(true);
+            perOfGrade[i].setEditable(false);
             perOfGrade[i].setHorizontalAlignment(JTextField.RIGHT);
         }
 
@@ -571,6 +645,22 @@ public class StudentClient extends JFrame {
             saveObjectFile.setEnabled(false);
             clear.setEnabled(false);
         }
+    }
+
+    @Override
+    public void run() {
+
+        System.out.println("进入线程");
+        while(!searchThread.isInterrupted()) {
+            if(!beingUpdated)
+                updateSearchResult(searchArea.getText());
+            try{
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("线程中断");
     }
 
 }

@@ -66,23 +66,48 @@ public class FileTools {
 
     }
 
-    public static void readObjectFile(File file, StudentList studentList) throws FileIOException {
-
-        if(file.exists() && file.isFile()) {
+    public static void saveTXTFile(File fileToBeSaved,StudentList studentList) throws FileIOException {
+        ArrayList<Student> students = studentList.getStudents();
+        if(!fileToBeSaved.exists()) {
             try {
-                FileInputStream fileIn = new FileInputStream(file);
-                ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-                ArrayList<Student> students = (ArrayList<Student>) objectIn.readObject();
-                studentList.setStudents(students);
+                FileWriter out = new FileWriter(fileToBeSaved);
+                BufferedWriter writer = new BufferedWriter(out);
+                for (Student student : students) {
+                    String s = "";
+                    s = student.getId() + "," + student.getName() + "," + student.getScore();
+                    writer.write(s);
+                    writer.newLine();
+                }
+                writer.close();
+                out.close();
             } catch (IOException e) {
                 e.printStackTrace();
-                throw (new FileIOException("File IO Error!"));
-            }
-            catch (ClassNotFoundException e) {
-                throw (new FileIOException("Can't get a object"));
             }
         } else {
-            throw (new FileIOException("File not existed!"));
+            throw (new FileIOException("File existed!")) ;
+        }
+    }
+
+    public static void readObjectFile(File file, StudentList studentList) throws FileIOException {
+
+        if(file.isFile()) {
+            if(file.getName().endsWith(".score")) {
+                try {
+                    FileInputStream fileIn = new FileInputStream(file);
+                    ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+                    ArrayList<Student> students = (ArrayList<Student>) objectIn.readObject();
+                    studentList.setStudents(students);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw (new FileIOException("File IO Error!"));
+                } catch (ClassNotFoundException e) {
+                    throw (new FileIOException("Can't get a object"));
+                }
+            } else {
+                throw (new FileIOException("Not a object file!"));
+            }
+        } else {
+            throw (new FileIOException("Not a file!"));
         }
         System.out.println("Read Object File Successfully!");
         //outputList(studentList);

@@ -38,4 +38,9 @@ public class DataModel extends AbstractTableModel {
         return CONS.column[column];
     }
 
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        return getValueAt(0,columnIndex).getClass();
+    }
+
 }
