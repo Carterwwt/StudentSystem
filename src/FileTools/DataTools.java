@@ -57,7 +57,7 @@ public class DataTools {
 
         for(Student student : students) {
             int score = student.getScore();
-            if(score >= 90 && score <= 100)
+            if(score >= 90)
                 numOfGradeAPlus++;
             else if(score >= 80 && score <90)
                 numOfGradeA++;

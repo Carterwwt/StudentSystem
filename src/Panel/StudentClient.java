@@ -306,7 +306,7 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void updateSearchResult(String regex) {
         if(regex.contains("\\"))
-            rowSorter.setRowFilter(RowFilter.regexFilter("........"));
+            rowSorter.setRowFilter(RowFilter.regexFilter("找不到的放弃吧"));
         else
             rowSorter.setRowFilter(RowFilter.regexFilter(regex));
     }
