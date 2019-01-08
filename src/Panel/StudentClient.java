@@ -10,6 +10,8 @@ import Repository.StudentRepo;
 import Exception.FileIOException;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
@@ -22,7 +24,7 @@ import java.io.File;
 
 @SuppressWarnings("all")
 
-public class StudentClient extends JFrame implements Runnable{
+public class StudentClient extends JFrame {
 
     //I can't find the problem!!! Or there is no big here!
 
@@ -87,12 +89,10 @@ public class StudentClient extends JFrame implements Runnable{
         setLayout(null);
         setResizable(false);
         setTitle("学生成绩管理系统------Created By CarterWang");
-        setBounds(400,200, CONS.frameWidth,CONS.frameHeight);
+        setBounds(400, 200, CONS.frameWidth, CONS.frameHeight);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setUpAllPanel();
         setVisible(true);
-        searchThread = new Thread(this);
-        searchThread.start();
     }
 
     private void setUpAllPanel() {
@@ -121,10 +121,9 @@ public class StudentClient extends JFrame implements Runnable{
             @Override
             public void mousePressed(MouseEvent e) {
 
-                beingUpdated = true;
 
                 int response = chooser.showOpenDialog(menuBar);
-                if(response == JFileChooser.APPROVE_OPTION) {
+                if (response == JFileChooser.APPROVE_OPTION) {
                     fileOpened = chooser.getSelectedFile();
                     try {
 
@@ -144,7 +143,6 @@ public class StudentClient extends JFrame implements Runnable{
                         disableAllJmenuItems();
                     }
                     repaint();
-                    beingUpdated = false;
                 }
             }
         });
@@ -152,18 +150,18 @@ public class StudentClient extends JFrame implements Runnable{
         saveTxtFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if(saveTxtFile.isEnabled()) {
+                if (saveTxtFile.isEnabled()) {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter(
                             "TXT文件(*.txt)", ".txt");
                     saver.setFileFilter(filter);
 
                     int respone = saver.showSaveDialog(menuBar);
-                    if(respone == JFileChooser.APPROVE_OPTION) {
+                    if (respone == JFileChooser.APPROVE_OPTION) {
                         File selectedFile = saver.getSelectedFile();
-                        FileFilter txtFilter = (FileNameExtensionFilter)saver.getFileFilter();
+                        FileFilter txtFilter = (FileNameExtensionFilter) saver.getFileFilter();
                         fileToBeSaved = new File(selectedFile.getAbsolutePath() + ((FileNameExtensionFilter) txtFilter).getExtensions()[0]);
                         try {
-                            FileTools.saveTXTFile(fileToBeSaved,StudentRepo.getStudentList());
+                            FileTools.saveTXTFile(fileToBeSaved, StudentRepo.getStudentList());
                         } catch (FileIOException ee) {
                             ee.showMessageDialog();
                         }
@@ -176,17 +174,17 @@ public class StudentClient extends JFrame implements Runnable{
         saveObjectFile.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if(saveObjectFile.isEnabled()) {
+                if (saveObjectFile.isEnabled()) {
                     try {
                         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                                 "对象文件(*.score)", ".score");
                         saver.setFileFilter(filter);
 
                         int respone = saver.showSaveDialog(menuBar);
-                        if(respone == JFileChooser.APPROVE_OPTION) {
+                        if (respone == JFileChooser.APPROVE_OPTION) {
 
                             File selectedFile = saver.getSelectedFile();
-                            FileFilter txtFilter = (FileNameExtensionFilter)saver.getFileFilter();
+                            FileFilter txtFilter = (FileNameExtensionFilter) saver.getFileFilter();
                             fileToBeSaved = new File(selectedFile.getAbsolutePath() + ((FileNameExtensionFilter) txtFilter).getExtensions()[0]);
 
                             System.out.println(fileToBeSaved.getAbsolutePath());
@@ -205,14 +203,12 @@ public class StudentClient extends JFrame implements Runnable{
             @Override
             public void mousePressed(MouseEvent e) {
 
-                beingUpdated = true;
-
-                if(readObjectFile.isEnabled()) {
+                if (readObjectFile.isEnabled()) {
                     try {
                         int response = chooser.showOpenDialog(menuBar);
-                        if(response == JFileChooser.APPROVE_OPTION) {
+                        if (response == JFileChooser.APPROVE_OPTION) {
                             fileOpened = chooser.getSelectedFile();
-                            FileTools.readObjectFile(fileOpened,StudentRepo.getStudentList());
+                            FileTools.readObjectFile(fileOpened, StudentRepo.getStudentList());
                             refreshAnalyView();
                             refreshTable();
                             refreshBottomPanel();
@@ -228,7 +224,6 @@ public class StudentClient extends JFrame implements Runnable{
                     }
                 }
 
-                beingUpdated = false;
 
             }
         });
@@ -267,7 +262,7 @@ public class StudentClient extends JFrame implements Runnable{
 
         searchPanel = new JPanel();
         searchPanel.setLayout(null);
-        searchPanel.setBounds(15,2,CONS.frameWidth - 35,50);
+        searchPanel.setBounds(15, 2, CONS.frameWidth - 35, 50);
         searchPanel.setBorder(BorderFactory.createRaisedBevelBorder());
 
         setUpSearchTextField();
@@ -278,19 +273,23 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpSearchTextField() {
         searchArea = new JTextField();
-        searchArea.setBounds(2,5,200,40);
-        searchArea.setFont(new Font("微软雅黑", Font.PLAIN,14));
+        searchArea.setBounds(2, 5, 200, 40);
+        searchArea.setFont(new Font("微软雅黑", Font.PLAIN, 14));
 
-        searchArea.addKeyListener(new KeyAdapter() {
+        searchArea.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void keyPressed(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case KeyEvent.VK_ENTER:
-                        updateSearchResult(searchArea.getText());
-                        break;
-                    default:
-                        break;
-                }
+            public void insertUpdate(DocumentEvent e) {
+                updateSearchResult(searchArea.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSearchResult(searchArea.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSearchResult(searchArea.getText());
             }
         });
 
@@ -299,13 +298,13 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpSearchLabel() {
         searchLabel = new JLabel("输入查询(点击表头可排序)");
-        searchLabel.setFont(new Font("微软雅黑", Font.PLAIN,14));
-        searchLabel.setBounds(210,5,200,40);
+        searchLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        searchLabel.setBounds(210, 5, 200, 40);
         searchPanel.add(searchLabel);
     }
 
     private void updateSearchResult(String regex) {
-        if(regex.contains("\\"))
+        if (regex.contains("\\"))
             rowSorter.setRowFilter(RowFilter.regexFilter("找不到的放弃吧"));
         else
             rowSorter.setRowFilter(RowFilter.regexFilter(regex));
@@ -317,21 +316,21 @@ public class StudentClient extends JFrame implements Runnable{
 
         // set scorePanel
         scorePanel.setLayout(null);
-        scorePanel.setBounds(CONS.scorePanelX,CONS.scorePanelY,CONS.scorePanelWidth,CONS.scorePanelHeight);
+        scorePanel.setBounds(CONS.scorePanelX, CONS.scorePanelY, CONS.scorePanelWidth, CONS.scorePanelHeight);
         scorePanel.setBorder(BorderFactory.createLoweredBevelBorder());
 
         //set table
         setUpTable();
 
         // Set ScrollPanel
-        scroll = new JScrollPane(table,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scroll.setBounds(10,35,CONS.scrollViewWidth,CONS.scrollViewHeight);
+        scroll = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scroll.setBounds(10, 35, CONS.scrollViewWidth, CONS.scrollViewHeight);
         scorePanel.add(scroll);
 
         // Set label
         JLabel label = new JLabel("Score");
-        label.setFont(new Font("Helvetica", Font.BOLD,14));
-        label.setBounds(10,10,50,20);
+        label.setFont(new Font("Helvetica", Font.BOLD, 14));
+        label.setBounds(10, 10, 50, 20);
         label.setVisible(true);
         scorePanel.add(label);
 
@@ -342,25 +341,25 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpAnalyPanel() {
         analyPanel = new JPanel();
-        analyPanel.setBounds(CONS.analyPanelX,CONS.analyPanelY,CONS.analyPanelWidth,CONS.analyPanelHeight);
+        analyPanel.setBounds(CONS.analyPanelX, CONS.analyPanelY, CONS.analyPanelWidth, CONS.analyPanelHeight);
         analyPanel.setBorder(BorderFactory.createLoweredBevelBorder());
         analyPanel.setLayout(null);
 
         // Set Title
         JLabel label = new JLabel("Data Analysis");
-        label.setFont(new Font("Helvetica", Font.BOLD,14));
-        label.setBounds(10,10,100,20);
+        label.setFont(new Font("Helvetica", Font.BOLD, 14));
+        label.setBounds(10, 10, 100, 20);
         label.setVisible(true);
 
         // Set AnalyViewPanel
         analyView = new JPanel();
         analyView.setBorder(BorderFactory.createLoweredBevelBorder());
-        analyView.setBounds(CONS.analyViewX,CONS.analyViewY,CONS.analyViewWidth,CONS.analyViewHeight);
+        analyView.setBounds(CONS.analyViewX, CONS.analyViewY, CONS.analyViewWidth, CONS.analyViewHeight);
         analyView.setVisible(true);
         analyView.setLayout(null);
 
         // Set AnalyViewComponents
-        if(!StudentRepo.getStudentList().getStudents().isEmpty())
+        if (!StudentRepo.getStudentList().getStudents().isEmpty())
             setUpAnalyViewComponents();
 
         analyPanel.add(analyView);
@@ -372,15 +371,15 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpBottomPanel() {
         bottomPanel = new JPanel();
-        bottomPanel.setBounds(15,CONS.frameHeight - 90,CONS.frameWidth-33,40);
+        bottomPanel.setBounds(15, CONS.frameHeight - 90, CONS.frameWidth - 33, 40);
         bottomPanel.setBorder(BorderFactory.createRaisedBevelBorder());
         bottomPanel.setLayout(null);
 
         // filePath
         filePath = new JLabel();
-        filePath.setBounds(5,12,600,20);
-        filePath.setFont(new Font("宋体", Font.PLAIN,13));
-        if(fileOpened != null)
+        filePath.setBounds(5, 12, 600, 20);
+        filePath.setFont(new Font("宋体", Font.PLAIN, 13));
+        if (fileOpened != null)
             filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
         filePath.setVisible(true);
 
@@ -395,15 +394,15 @@ public class StudentClient extends JFrame implements Runnable{
 
         table = new JTable(dataModel);
         table.setRowHeight(25);
-        table.setFont(new Font("宋体",Font.PLAIN,14));
+        table.setFont(new Font("宋体", Font.PLAIN, 14));
         table.setRowSelectionAllowed(false);
         rowSorter = new TableRowSorter<AbstractTableModel>(dataModel);
         table.setRowSorter(rowSorter);
 
         // Set header
         JTableHeader header = table.getTableHeader();
-        header.setPreferredSize(new Dimension(header.getWidth(),22));
-        header.setFont(new Font("Helvetica",Font.PLAIN,14));
+        header.setPreferredSize(new Dimension(header.getWidth(), 22));
+        header.setFont(new Font("Helvetica", Font.PLAIN, 14));
 
         setUpCellRender();
 
@@ -418,7 +417,7 @@ public class StudentClient extends JFrame implements Runnable{
                                                            boolean hasFocus, int row, int column) {
                 // table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
                 if (row % 2 == 0)
-                    setBackground(new Color(236,236,236));
+                    setBackground(new Color(236, 236, 236));
                 else if (row % 2 == 1)
                     setBackground(Color.white);
                 return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -426,21 +425,21 @@ public class StudentClient extends JFrame implements Runnable{
         };
 
 
-        for(int i=0;i<3;i++) {
+        for (int i = 0; i < 3; i++) {
             table.getColumn(CONS.column[i]).setCellRenderer(renderer);
         }
     }
 
     private void setUpHighestScoreLabel() {
         highestSocreLabel = new JLabel();
-        highestSocreLabel.setBounds(CONS.dataLabelX,CONS.highestY,CONS.dataLabelWidth,CONS.dataHeight);
+        highestSocreLabel.setBounds(CONS.dataLabelX, CONS.highestY, CONS.dataLabelWidth, CONS.dataHeight);
         highestSocreLabel.setText("Highest Score");
         highestSocreLabel.setVisible(true);
     }
 
     private void setUpHighestScoreArea() {
         highestScoreArea = new JTextField();
-        highestScoreArea.setBounds(CONS.dataAreaX,CONS.highestY,CONS.dataAreaWidth,CONS.dataHeight);
+        highestScoreArea.setBounds(CONS.dataAreaX, CONS.highestY, CONS.dataAreaWidth, CONS.dataHeight);
         Student student = DataTools.getHighestStudent();
         highestScoreArea.setText(String.valueOf(student.getScore()));
         highestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
@@ -450,14 +449,14 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpLowestScoreLabel() {
         lowestScoreLabel = new JLabel();
-        lowestScoreLabel.setBounds(CONS.dataLabelX,CONS.lowestY,CONS.dataLabelWidth,CONS.dataHeight);
+        lowestScoreLabel.setBounds(CONS.dataLabelX, CONS.lowestY, CONS.dataLabelWidth, CONS.dataHeight);
         lowestScoreLabel.setText("Lowest Score");
         lowestScoreLabel.setVisible(true);
     }
 
     private void setUpLowestScoreArea() {
         lowestScoreArea = new JTextField();
-        lowestScoreArea.setBounds(CONS.dataAreaX,CONS.lowestY,CONS.dataAreaWidth,CONS.dataHeight);
+        lowestScoreArea.setBounds(CONS.dataAreaX, CONS.lowestY, CONS.dataAreaWidth, CONS.dataHeight);
         Student student = DataTools.getLowestStudent();
         lowestScoreArea.setText(String.valueOf(student.getScore()));
         lowestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
@@ -467,14 +466,14 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpAverageScoreLabel() {
         averageScoreLabel = new JLabel();
-        averageScoreLabel.setBounds(CONS.dataLabelX,CONS.averageY,CONS.dataLabelWidth,CONS.dataHeight);
+        averageScoreLabel.setBounds(CONS.dataLabelX, CONS.averageY, CONS.dataLabelWidth, CONS.dataHeight);
         averageScoreLabel.setText("Average Score");
         averageScoreLabel.setVisible(true);
     }
 
     private void setUpAverageScoreArea() {
         averageScoreArea = new JTextField();
-        averageScoreArea.setBounds(CONS.dataAreaX,CONS.averageY,CONS.dataAreaWidth,CONS.dataHeight);
+        averageScoreArea.setBounds(CONS.dataAreaX, CONS.averageY, CONS.dataAreaWidth, CONS.dataHeight);
         String average = DataTools.getAverageScore();
         averageScoreArea.setHorizontalAlignment(JTextField.RIGHT);
         averageScoreArea.setText(average);
@@ -485,7 +484,7 @@ public class StudentClient extends JFrame implements Runnable{
 
     private void setUpAnalyViewComponents() {
 
-        if(!isAnalyViewComponentsSetUp)
+        if (!isAnalyViewComponentsSetUp)
             isAnalyViewComponentsSetUp = true;
 
         // high low average
@@ -517,28 +516,28 @@ public class StudentClient extends JFrame implements Runnable{
         CLabel = new JLabel("Grade C (60-69)");
         DLabel = new JLabel("Grade D (0-60)");
 
-        APlusLabel.setBounds(CONS.dataLabelX,CONS.APlusY,CONS.gradeLabelWidth,CONS.dataHeight);
+        APlusLabel.setBounds(CONS.dataLabelX, CONS.APlusY, CONS.gradeLabelWidth, CONS.dataHeight);
         APlusLabel.setVisible(true);
-        ALabel.setBounds(CONS.dataLabelX,CONS.AY,CONS.gradeLabelWidth,CONS.dataHeight);
+        ALabel.setBounds(CONS.dataLabelX, CONS.AY, CONS.gradeLabelWidth, CONS.dataHeight);
         ALabel.setVisible(true);
-        BLabel.setBounds(CONS.dataLabelX,CONS.BY,CONS.gradeLabelWidth,CONS.dataHeight);
+        BLabel.setBounds(CONS.dataLabelX, CONS.BY, CONS.gradeLabelWidth, CONS.dataHeight);
         BLabel.setVisible(true);
-        CLabel.setBounds(CONS.dataLabelX,CONS.CY,CONS.gradeLabelWidth,CONS.dataHeight);
+        CLabel.setBounds(CONS.dataLabelX, CONS.CY, CONS.gradeLabelWidth, CONS.dataHeight);
         CLabel.setVisible(true);
-        DLabel.setBounds(CONS.dataLabelX,CONS.DY,CONS.gradeLabelWidth,CONS.dataHeight);
+        DLabel.setBounds(CONS.dataLabelX, CONS.DY, CONS.gradeLabelWidth, CONS.dataHeight);
         DLabel.setVisible(true);
 
         takeUp = new JLabel[5];
-        for(int i=0;i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             takeUp[i] = new JLabel("takes up");
-            takeUp[i].setBounds(CONS.gradeLabelX,CONS.APlusY + i*50,CONS.gradePerWidth,CONS.dataHeight);
+            takeUp[i].setBounds(CONS.gradeLabelX, CONS.APlusY + i * 50, CONS.gradePerWidth, CONS.dataHeight);
             takeUp[i].setVisible(true);
         }
 
         percentage = new JLabel[5];
-        for(int i=0;i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             percentage[i] = new JLabel("%");
-            percentage[i].setBounds(CONS.percentageX,CONS.APlusY + i*50,50,CONS.dataHeight);
+            percentage[i].setBounds(CONS.percentageX, CONS.APlusY + i * 50, 50, CONS.dataHeight);
             percentage[i].setVisible(true);
         }
 
@@ -554,8 +553,8 @@ public class StudentClient extends JFrame implements Runnable{
         numOfStu[3] = new JTextField(String.valueOf(percentage.getNumOfGradeC()));
         numOfStu[4] = new JTextField(String.valueOf(percentage.getNumOfGradeD()));
 
-        for(int i=0;i<5;i++) {
-            numOfStu[i].setBounds(CONS.dataAreaX,CONS.APlusY + i*50,CONS.dataAreaWidth,CONS.dataHeight);
+        for (int i = 0; i < 5; i++) {
+            numOfStu[i].setBounds(CONS.dataAreaX, CONS.APlusY + i * 50, CONS.dataAreaWidth, CONS.dataHeight);
             numOfStu[i].setVisible(true);
             numOfStu[i].setEditable(false);
             numOfStu[i].setHorizontalAlignment(JTextField.RIGHT);
@@ -563,14 +562,14 @@ public class StudentClient extends JFrame implements Runnable{
 
         perOfGrade = new JTextField[5];
 
-        perOfGrade[0] = new JTextField(String.format("%.2f",percentage.getPercentOfAPlus()));
-        perOfGrade[1] = new JTextField(String.format("%.2f",percentage.getPercentOfA()));
-        perOfGrade[2] = new JTextField(String.format("%.2f",percentage.getPercentOfB()));
-        perOfGrade[3] = new JTextField(String.format("%.2f",percentage.getPercentOfC()));
-        perOfGrade[4] = new JTextField(String.format("%.2f",percentage.getPercentOfD()));
+        perOfGrade[0] = new JTextField(String.format("%.2f", percentage.getPercentOfAPlus()));
+        perOfGrade[1] = new JTextField(String.format("%.2f", percentage.getPercentOfA()));
+        perOfGrade[2] = new JTextField(String.format("%.2f", percentage.getPercentOfB()));
+        perOfGrade[3] = new JTextField(String.format("%.2f", percentage.getPercentOfC()));
+        perOfGrade[4] = new JTextField(String.format("%.2f", percentage.getPercentOfD()));
 
-        for(int i=0;i<5;i++) {
-            perOfGrade[i].setBounds(320,CONS.APlusY + i*50,55,CONS.dataHeight);
+        for (int i = 0; i < 5; i++) {
+            perOfGrade[i].setBounds(320, CONS.APlusY + i * 50, 55, CONS.dataHeight);
             perOfGrade[i].setVisible(true);
             perOfGrade[i].setEditable(false);
             perOfGrade[i].setHorizontalAlignment(JTextField.RIGHT);
@@ -593,7 +592,7 @@ public class StudentClient extends JFrame implements Runnable{
         analyView.add(CLabel);
         analyView.add(DLabel);
 
-        for(int i=0;i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             analyView.add(takeUp[i]);
             analyView.add(percentage[i]);
             analyView.add(numOfStu[i]);
@@ -623,44 +622,28 @@ public class StudentClient extends JFrame implements Runnable{
         numOfStu[3].setText(String.valueOf(percentage.getNumOfGradeC()));
         numOfStu[4].setText(String.valueOf(percentage.getNumOfGradeD()));
 
-        perOfGrade[0].setText(String.format("%.2f",percentage.getPercentOfAPlus()));
-        perOfGrade[1].setText(String.format("%.2f",percentage.getPercentOfA()));
-        perOfGrade[2].setText(String.format("%.2f",percentage.getPercentOfB()));
-        perOfGrade[3].setText(String.format("%.2f",percentage.getPercentOfC()));
-        perOfGrade[4].setText(String.format("%.2f",percentage.getPercentOfD()));
+        perOfGrade[0].setText(String.format("%.2f", percentage.getPercentOfAPlus()));
+        perOfGrade[1].setText(String.format("%.2f", percentage.getPercentOfA()));
+        perOfGrade[2].setText(String.format("%.2f", percentage.getPercentOfB()));
+        perOfGrade[3].setText(String.format("%.2f", percentage.getPercentOfC()));
+        perOfGrade[4].setText(String.format("%.2f", percentage.getPercentOfD()));
 
     }
 
     private void refreshBottomPanel() {
-        if(filePath != null)
-            if(fileOpened != null)
+        if (filePath != null)
+            if (fileOpened != null)
                 filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
             else
                 filePath.setText("");
     }
 
     private void disableAllJmenuItems() {
-        if(fileOpened == null) {
+        if (fileOpened == null) {
             saveTxtFile.setEnabled(false);
             saveObjectFile.setEnabled(false);
             clear.setEnabled(false);
         }
     }
-
-    @Override
-    public void run() {
-
-        System.out.println("进入线程");
-        while(!searchThread.isInterrupted()) {
-            if(!beingUpdated)
-                updateSearchResult(searchArea.getText());
-            try{
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("线程中断");
-    }
-
 }
+
