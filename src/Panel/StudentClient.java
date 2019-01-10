@@ -1,6 +1,8 @@
 package Panel;
 
 import CONSTANT.CONS;
+import Chart.BarChart;
+import Chart.PieChart;
 import DataStructure.Percentage;
 import TableDataModel.DataModel;
 import DataStructure.Student;
@@ -15,9 +17,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
+import javax.xml.crypto.Data;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -78,6 +79,10 @@ public class StudentClient extends JFrame {
     JLabel[] takeUp;
     JLabel[] percentage;
 
+    JButton barChartButton;
+    JButton pieChartButton;
+    JFrame barChartFrame;
+    JFrame pieChartFrame;
 
     boolean isAnalyViewComponentsSetUp = false;
     boolean beingUpdated = false;
@@ -381,7 +386,6 @@ public class StudentClient extends JFrame {
         filePath.setFont(new Font("宋体", Font.PLAIN, 13));
         if (fileOpened != null)
             filePath.setText(fileOpened.getAbsolutePath() + "  共" + StudentRepo.getStudentList().getStudents().size() + "人");
-        filePath.setVisible(true);
 
         bottomPanel.add(filePath);
         add(bottomPanel);
@@ -406,7 +410,7 @@ public class StudentClient extends JFrame {
 
         setUpCellRender();
 
-        scorePanel.add(table);
+        //scorePanel.add(table);
     }
 
     private void setUpCellRender() {
@@ -428,13 +432,14 @@ public class StudentClient extends JFrame {
         for (int i = 0; i < 3; i++) {
             table.getColumn(CONS.column[i]).setCellRenderer(renderer);
         }
+
     }
 
     private void setUpHighestScoreLabel() {
         highestSocreLabel = new JLabel();
         highestSocreLabel.setBounds(CONS.dataLabelX, CONS.highestY, CONS.dataLabelWidth, CONS.dataHeight);
         highestSocreLabel.setText("Highest Score");
-        highestSocreLabel.setVisible(true);
+        analyView.add(highestSocreLabel);
     }
 
     private void setUpHighestScoreArea() {
@@ -443,15 +448,15 @@ public class StudentClient extends JFrame {
         Student student = DataTools.getHighestStudent();
         highestScoreArea.setText(String.valueOf(student.getScore()));
         highestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
-        highestScoreArea.setVisible(true);
         highestScoreArea.setEditable(false);
+        analyView.add(highestScoreArea);
     }
 
     private void setUpLowestScoreLabel() {
         lowestScoreLabel = new JLabel();
         lowestScoreLabel.setBounds(CONS.dataLabelX, CONS.lowestY, CONS.dataLabelWidth, CONS.dataHeight);
         lowestScoreLabel.setText("Lowest Score");
-        lowestScoreLabel.setVisible(true);
+        analyView.add(lowestScoreLabel);
     }
 
     private void setUpLowestScoreArea() {
@@ -460,15 +465,15 @@ public class StudentClient extends JFrame {
         Student student = DataTools.getLowestStudent();
         lowestScoreArea.setText(String.valueOf(student.getScore()));
         lowestScoreArea.setHorizontalAlignment(JTextField.RIGHT);
-        lowestScoreArea.setVisible(true);
         lowestScoreArea.setEditable(false);
+        analyView.add(lowestScoreArea);
     }
 
     private void setUpAverageScoreLabel() {
         averageScoreLabel = new JLabel();
         averageScoreLabel.setBounds(CONS.dataLabelX, CONS.averageY, CONS.dataLabelWidth, CONS.dataHeight);
         averageScoreLabel.setText("Average Score");
-        averageScoreLabel.setVisible(true);
+        analyView.add(averageScoreLabel);
     }
 
     private void setUpAverageScoreArea() {
@@ -479,6 +484,7 @@ public class StudentClient extends JFrame {
         averageScoreArea.setText(average);
         averageScoreArea.setVisible(true);
         averageScoreArea.setEditable(false);
+        analyView.add(averageScoreArea);
     }
 
 
@@ -494,12 +500,41 @@ public class StudentClient extends JFrame {
         setUpLowestScoreArea();
         setUpAverageScoreLabel();
         setUpAverageScoreArea();
-
-        // percentage
+        setUpButtons();
         setUpPercentage();
 
-        addComponentsToAnalyView();
+    }
 
+    private void setUpButtons() {
+        barChartButton = new JButton("Create barChart");
+        pieChartButton = new JButton("Create pieChart");
+        barChartButton.setBounds(CONS.barChartX,CONS.chartButtonY,CONS.chartButtonWidth,CONS.chartButtonHeight);
+        pieChartButton.setBounds(CONS.pieChartX,CONS.chartButtonY,CONS.chartButtonWidth,CONS.chartButtonHeight);
+
+        barChartButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                BarChart barChart = new BarChart(DataTools.getPercentage());
+                barChartFrame = barChart.getBarChartFrame();
+                barChartFrame.setBounds(400,400,750,630);
+                barChartFrame.setVisible(true);
+                barChartButton.setFocusPainted(false);
+            }
+        });
+
+        pieChartButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                PieChart pieChart = new PieChart(DataTools.getPercentage());
+                pieChartFrame = pieChart.getPieChartFrame();
+                pieChartFrame.setBounds(400,400,750,630);
+                pieChartFrame.setVisible(true);
+                pieChartButton.setFocusPainted(false);
+            }
+        });
+
+        analyView.add(barChartButton);
+        analyView.add(pieChartButton);
     }
 
     private void setUpPercentage() {
@@ -517,28 +552,29 @@ public class StudentClient extends JFrame {
         DLabel = new JLabel("Grade D (0-60)");
 
         APlusLabel.setBounds(CONS.dataLabelX, CONS.APlusY, CONS.gradeLabelWidth, CONS.dataHeight);
-        APlusLabel.setVisible(true);
         ALabel.setBounds(CONS.dataLabelX, CONS.AY, CONS.gradeLabelWidth, CONS.dataHeight);
-        ALabel.setVisible(true);
         BLabel.setBounds(CONS.dataLabelX, CONS.BY, CONS.gradeLabelWidth, CONS.dataHeight);
-        BLabel.setVisible(true);
         CLabel.setBounds(CONS.dataLabelX, CONS.CY, CONS.gradeLabelWidth, CONS.dataHeight);
-        CLabel.setVisible(true);
         DLabel.setBounds(CONS.dataLabelX, CONS.DY, CONS.gradeLabelWidth, CONS.dataHeight);
-        DLabel.setVisible(true);
+
+        analyView.add(APlusLabel);
+        analyView.add(ALabel);
+        analyView.add(BLabel);
+        analyView.add(CLabel);
+        analyView.add(DLabel);
 
         takeUp = new JLabel[5];
         for (int i = 0; i < 5; i++) {
             takeUp[i] = new JLabel("takes up");
-            takeUp[i].setBounds(CONS.gradeLabelX, CONS.APlusY + i * 50, CONS.gradePerWidth, CONS.dataHeight);
-            takeUp[i].setVisible(true);
+            takeUp[i].setBounds(CONS.gradeLabelX, CONS.APlusY + i * CONS.space, CONS.gradePerWidth, CONS.dataHeight);
+            analyView.add(takeUp[i]);
         }
 
         percentage = new JLabel[5];
         for (int i = 0; i < 5; i++) {
             percentage[i] = new JLabel("%");
-            percentage[i].setBounds(CONS.percentageX, CONS.APlusY + i * 50, 50, CONS.dataHeight);
-            percentage[i].setVisible(true);
+            percentage[i].setBounds(CONS.percentageX, CONS.APlusY + i * CONS.space, 50, CONS.dataHeight);
+            analyView.add(percentage[i]);
         }
 
     }
@@ -554,10 +590,10 @@ public class StudentClient extends JFrame {
         numOfStu[4] = new JTextField(String.valueOf(percentage.getNumOfGradeD()));
 
         for (int i = 0; i < 5; i++) {
-            numOfStu[i].setBounds(CONS.dataAreaX, CONS.APlusY + i * 50, CONS.dataAreaWidth, CONS.dataHeight);
-            numOfStu[i].setVisible(true);
+            numOfStu[i].setBounds(CONS.dataAreaX, CONS.APlusY + i * CONS.space, CONS.dataAreaWidth, CONS.dataHeight);
             numOfStu[i].setEditable(false);
             numOfStu[i].setHorizontalAlignment(JTextField.RIGHT);
+            analyView.add(numOfStu[i]);
         }
 
         perOfGrade = new JTextField[5];
@@ -569,33 +605,9 @@ public class StudentClient extends JFrame {
         perOfGrade[4] = new JTextField(String.format("%.2f", percentage.getPercentOfD()));
 
         for (int i = 0; i < 5; i++) {
-            perOfGrade[i].setBounds(320, CONS.APlusY + i * 50, 55, CONS.dataHeight);
-            perOfGrade[i].setVisible(true);
+            perOfGrade[i].setBounds(320, CONS.APlusY + i * CONS.space, 55, CONS.dataHeight);
             perOfGrade[i].setEditable(false);
             perOfGrade[i].setHorizontalAlignment(JTextField.RIGHT);
-        }
-
-    }
-
-    private void addComponentsToAnalyView() {
-
-        analyView.add(highestScoreArea);
-        analyView.add(highestSocreLabel);
-        analyView.add(lowestScoreLabel);
-        analyView.add(lowestScoreArea);
-        analyView.add(averageScoreLabel);
-        analyView.add(averageScoreArea);
-
-        analyView.add(APlusLabel);
-        analyView.add(ALabel);
-        analyView.add(BLabel);
-        analyView.add(CLabel);
-        analyView.add(DLabel);
-
-        for (int i = 0; i < 5; i++) {
-            analyView.add(takeUp[i]);
-            analyView.add(percentage[i]);
-            analyView.add(numOfStu[i]);
             analyView.add(perOfGrade[i]);
         }
 

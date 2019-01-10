@@ -43,14 +43,23 @@ public class CONS {
     public static final int dataAreaWidth = 60;
     public static final int dataHeight = 25;
 
+    public static final int space = 43;
+
     // gradeLabel
-    public static final int APlusY = 180;
-    public static final int AY = 230;
-    public static final int BY = 280;
-    public static final int CY = 330;
-    public static final int DY = 380;
+    public static final int APlusY = 165;
+    public static final int AY = APlusY + space;
+    public static final int BY = APlusY + space * 2;
+    public static final int CY = APlusY + space * 3;
+    public static final int DY = APlusY + space * 4;
     public static final int gradeLabelX = 255;
     public static final int gradeLabelWidth = 140;
     public static final int gradePerWidth = 80;
     public static final int percentageX = 380;
+
+    public static final int chartButtonWidth = 130;
+    public static final int chartButtonHeight = 35;
+    public static final int barChartX = analyViewWidth/2 - (chartButtonWidth*2 + 20)/2;
+    public static final int pieChartX = analyPanelWidth/2 + 10;
+    public static final int chartButtonY = 390;
+
 }

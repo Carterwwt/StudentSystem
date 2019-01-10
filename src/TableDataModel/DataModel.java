@@ -9,7 +9,6 @@ import java.util.ArrayList;
 
 public class DataModel extends AbstractTableModel {
 
-
     @Override
     public int getRowCount() {
         ArrayList<Student> list = StudentRepo.getStudentList().getStudents();
@@ -23,6 +22,7 @@ public class DataModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
+
         ArrayList<Student> list = StudentRepo.getStudentList().getStudents();
         Student student = list.get(rowIndex);
         if(columnIndex == 0)
